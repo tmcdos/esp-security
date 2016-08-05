@@ -15,54 +15,6 @@
     <div class="content">
       <div style="float:left; padding:2px">
         <div class="card">
-          <h1>Syslog
-            <div id="syslog-spinner" class="spinner spinner-small"></div>
-          </h1>
-          <form action="#" id="Syslog-form" class="pure-form" hidden>
-            <div class="pure-form-stacked">
-              <label>Syslog Host</label>
-              <input type="text" name="syslog_host" />
-              <div class="popup">Esp-link sends event/debug info to this syslog host 
-                (hostname:port). Leave empty to disable syslog.</div>
-            </div>
-            <div class="pure-form-stacked">
-              <label>Min Heap</label>
-              <div>
-                <input type="text" name="syslog_minheap" />
-                <div class="popup">Stop sending syslog if free heap drops below this many bytes</div>
-              </div>
-              <div>
-                <label>Filter</label>
-                <select name="syslog_filter" href="#">
-                  <option value="0">EMERG</option>
-                  <option value="1">ALERT</option>
-                  <option value="2">CRIT</option>
-                  <option value="3">ERR</option>
-                  <option value="4">WARNING</option>
-                  <option value="5">NOTICE</option>
-                  <option value="6">INFO</option>
-                  <option value="7">DEBUG</option>
-                </select>
-                <div class="popup">Minimum severity to send</div>
-              </div>
-            </div>
-            <div>
-              <input type="checkbox" name="syslog_showtick" />
-              <label>Include esp-link millisecond ticker</label>
-            </div>
-            <div>
-              <input type="checkbox" name="syslog_showdate" />
-              <label>Include esp-link datetime</label>
-              <div class="popup">Some syslog servers rotate log if timestamp is in the past so disable to prevent this</div>
-            </div>
-            <button id="Syslog-button" type="submit" class="pure-button button-primary">
-              Update Syslog settings
-            </button>
-          </form>
-        </div>
-      </div>
-      <div style="float:left; padding:2px">
-        <div class="card">
           <h1>SNTP
             <div id="sntp-spinner" class="spinner spinner-small"></div>
           </h1>

@@ -12,5 +12,6 @@ int cgiServicesSet(HttpdConnData *connData);
 
 extern char* rst_codes[7];
 extern char* flash_maps[7];
+extern uint32_t sntp_start; // UNIX timestamp 
 
 #endif // CGISERVICES_H

@@ -16,10 +16,17 @@
 
 #define PERIPHS_IO_MUX_PULLDWN          BIT6
 #define PERIPHS_IO_MUX_SLEEP_PULLDWN    BIT2
-#define PIN_PULLDWN_DIS(PIN_NAME)             CLEAR_PERI_REG_MASK(PIN_NAME, PERIPHS_IO_MUX_PULLDWN)
-#define PIN_PULLDWN_EN(PIN_NAME)              SET_PERI_REG_MASK(PIN_NAME, PERIPHS_IO_MUX_PULLDWN)
+#define PIN_PULLDWN_DIS(PIN_NAME)       CLEAR_PERI_REG_MASK(PIN_NAME, PERIPHS_IO_MUX_PULLDWN)
+#define PIN_PULLDWN_EN(PIN_NAME)        SET_PERI_REG_MASK(PIN_NAME, PERIPHS_IO_MUX_PULLDWN)
 
-extern uint8_t relay_status[4]; 
+typedef struct {
+  uint8_t state; // current GPIO output level
+  uint8_t armed; // whether there is a timer waiting to invert the GPIO level
+  uint32_t timeout; // timer in msec
+  uint32_t counter; // how many times the GPIO was inverted
+} relay_info;
+
+extern relay_info relay_data[4]; 
 	
 int ICACHE_FLASH_ATTR relay_get_state(int relayNumber);
 int ICACHE_FLASH_ATTR relay_set_state(int relayNumber,unsigned state);

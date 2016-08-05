@@ -1,25 +1,21 @@
-#ifndef __POLIMEX_H__
-#define __POLIMEX_H__
+#ifndef __ICON_H__
+#define __ICON_H__
 
-#include <ip_addr.h>
 #include <c_types.h>
-#include <espconn.h>
 
 // 200msec for the iCON timeout
 #define ICON_INTERVAL 200
-#define PUSH_TIMEOUT 4000
 
-// buffer for incoming iCON messages
-#define UART_BUF_LEN 80
+// buffer for incoming and outgoing iCON messages
+#define UART_BUF_LEN 250
+
+// maximum packet for /sdk/cmd.json
+#define MAX_DATA UART_BUF_LEN - 7
 
 // maximum number of tracked iCON devices
 #define MAX_ICON 32
 
-// maximum size of buffer for HTTP request - aligned to 32-bit
-#define MAX_ICON_JSON 1500
-
 typedef enum {ICS_IDLE, ICS_SCAN, ICS_EVENT, ICS_DELETE, ICS_CMD} ics_type;
-typedef enum {CBU_NONE, CBU_SENT, CBU_OKAY, CBU_CLOSE} cbs_type;
 
 typedef struct  __attribute__((packed))
 {
@@ -72,36 +68,39 @@ typedef union __attribute__((packed))
   event_733 ans_event;
 } icon_input;
 
-
-struct icon_node
+typedef struct icon_node_str
 {
-  uint8_t adr;
+  uint8_t adr, skip, num_timeout, priority, def_priority;
+  bool must_delete;
   uint16_t inp,outp;
   uint8_t UH;
   uint8_t UL;
   uint8_t DT[8]; // BCD counter
   icon_event_format event;
-};
+} icon_node;
 
 extern ics_type icon_state;
-extern uint8_t bridge_used, icon_start_adr, icon_stop_adr, icon_scan_adr, icon_count;
-extern uint32_t heart_start;
-extern struct icon_node icon_dev[MAX_ICON];
-char udp_reply[256];
-
-void ICACHE_FLASH_ATTR polimexInit(void);
-void ICACHE_FLASH_ATTR send_scan(void);
-void ICACHE_FLASH_ATTR icon_recv(char *buf, int length);
+extern uint8_t icon_start_adr, icon_stop_adr, icon_scan_adr, icon_count, icon_current, icon_adr;
+extern uint8_t saved_adr, saved_cmd;
+//extern struct icon_node icon_dev[MAX_ICON];
+extern int icon_data_len;
+extern char icon_data[MAX_DATA];
+extern os_timer_t icon_timer;
+extern bool cmd_wait;
 
 uint8 ICACHE_FLASH_ATTR calc_crc(const char *buf, int len);
+void ICACHE_FLASH_ATTR icon_recv(char *buf, int length);
+void ICACHE_FLASH_ATTR icon_send_scan(void);
+void ICACHE_FLASH_ATTR icon_start_poll(void);
+void ICACHE_FLASH_ATTR icon_next_poll(void);
+void ICACHE_FLASH_ATTR icon_send_ping(void);
+void ICACHE_FLASH_ATTR icon_send_cmd(void);
+
 void ICACHE_FLASH_ATTR icon_timerfunc(void);
-void ICACHE_FLASH_ATTR icon_send_scan(uint8_t adr);
 void ICACHE_FLASH_ATTR icon_scan_next(void);
 void ICACHE_FLASH_ATTR icon_send_read(bool del_event);
 void ICACHE_FLASH_ATTR icon_wait_event(void);
 void ICACHE_FLASH_ATTR icon_poll_next(void);
 void ICACHE_FLASH_ATTR event_timerfunc(void);
-void ICACHE_FLASH_ATTR http_timerfunc(void);
-void ICACHE_FLASH_ATTR send_json_info(void);
-                           
-#endif /* __SER_BRIDGE_H__ */
+
+#endif

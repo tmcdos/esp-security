@@ -6,6 +6,12 @@
 #define F_AUTOSCAN   4 // scan iCON bus on power-up
 #define F_SSL_PUSH   8 // use HTTPS for JSON callbacks
 #define F_HTTP_AUTH 16 // require HTTP authentication
+#define F_HEARTBEAT 32 // enable heart-beat
+#define F_EVENT_PUSH 64 // enable JSON posting for iCON events
+#define F_IO_PUSH 128 // enable JSON posting for ESP-8266 GPIO changes
+#define F_SDK_PULL 256 // enable execution of SDK commands
+#define F_BRIDGE 512 // enable TCP-UART bridge
+#define F_IPFILTER 1024 // allow connections only from a given IP
 
 // Flash configuration settings. When adding new items always add them at the end and formulate
 // them such that a value of zero is an appropriate default or backwards compatible. Existing
@@ -24,8 +30,8 @@ typedef struct {
   char     ssid[32];                   // SoftAP
   char     password[64];               // SoftAP
   uint16_t url_port;
-  char     icon_host[32];              // only hostname
-  char     icon_url[64];               // URL to send iCON events info (without host, but leading slash)
+  char     icon_host[32];              // host to send iCON events
+  char     icon_url[64];               // URL to send iCON events info (with leading slash)
   uint8_t  log_mode;                   // UART log debug mode
   char     sntp_server[32];
   int8_t   timezone_offset;

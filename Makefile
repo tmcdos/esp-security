@@ -74,7 +74,7 @@ $(BUILD_NUMBER_FILE): $(USER1_OUT)
 $(USER1_OUT): $(APP_AR) $(LD_SCRIPT1)
 	$(vecho) "LD $@"
 	$(Q) $(LD) -L$(SDK_LIBDIR) -T$(LD_SCRIPT1) $(LDFLAGS) -Wl,--start-group $(LIBS) $(APP_AR) -Wl,--end-group -o $@
-	$(Q) $(OBJDP) -S $(USER1_OUT) > $(addprefix $(BUILD_BASE)/,$(TARGET).dump)
+#	$(Q) $(OBJDP) -S $(USER1_OUT) > $(addprefix $(BUILD_BASE)/,$(TARGET).dump)
 
 $(USER2_OUT): $(APP_AR) $(LD_SCRIPT2)
 	$(vecho) "LD $@"

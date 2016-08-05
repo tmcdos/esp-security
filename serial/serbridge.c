@@ -7,11 +7,11 @@
 #include "serbridge.h"
 #include "config.h"
 #include "console.h"
-#include "polimex.h" 
+#include "icon.h" 
 
-extern uint8_t bridge_active;
 static struct espconn serbridgeConn;
 static esp_tcp serbridgeTcp;
+uint8_t bridge_active; // there is currently active TCP-Bridge
 
 sint8  ICACHE_FLASH_ATTR espbuffsend(serbridgeConnData *conn, const char *data, uint16 len);
 
@@ -154,6 +154,7 @@ static void ICACHE_FLASH_ATTR serbridgeDisconCb(void *arg)
   conn->conn = NULL;
 
 	bridge_active = 0;
+	if(icon_state != ICS_IDLE) icon_send_cmd();
 }
 
 // Connection reset callback (note that there will be no DisconCb)
@@ -190,6 +191,7 @@ static void ICACHE_FLASH_ATTR serbridgeConnectCb(void *arg)
   espconn_regist_sentcb(conn, serbridgeSentCb);
 
   espconn_set_opt(conn, ESPCONN_REUSEADDR|ESPCONN_NODELAY);
+  if(icon_state != ICS_IDLE) espconn_recv_hold(conn);
 	bridge_active = 1;
 }
 
@@ -224,21 +226,34 @@ void ICACHE_FLASH_ATTR serbridgeInitPins()
   }
 }
 
-// Start transparent serial bridge TCP server on specified port (typ. 5000)
-void ICACHE_FLASH_ATTR serbridgeInit(int port) 
+void ICACHE_FLASH_ATTR serbridgeStop(void) 
 {
-  serbridgeInitPins();
-  // TCP-UART bridge
+  for (short i=0; i<MAX_CONN; i++)
+    if (connData[i].conn) espconn_disconnect(connData[i].conn);
+  espconn_delete(&serbridgeConn);
+  NODE_DBG("Serial bridge stopped\n");
+}
+
+void ICACHE_FLASH_ATTR serbridgeStart(void) 
+{
   os_memset(connData, 0, sizeof(connData));
+  // TCP-UART bridge
   serbridgeConn.type = ESPCONN_TCP;
   serbridgeConn.state = ESPCONN_NONE;
-  serbridgeTcp.local_port = port;
+  serbridgeTcp.local_port = flashConfig.bridge_port;
   serbridgeConn.proto.tcp = &serbridgeTcp;
   espconn_regist_connectcb(&serbridgeConn, serbridgeConnectCb);
   espconn_accept(&serbridgeConn);
   espconn_tcp_set_max_con_allow(&serbridgeConn, MAX_CONN);
   espconn_regist_time(&serbridgeConn, SER_BRIDGE_TIMEOUT, 0);
-  NODE_DBG("Serial bridge on port %d\n", port);
+  NODE_DBG("Serial bridge on port %d\n", flashConfig.bridge_port);
+}
 
+// Start transparent serial bridge TCP server on specified port (typ. 5000)
+void ICACHE_FLASH_ATTR serbridgeInit(void) 
+{
+  serbridgeInitPins();
+  os_memset(connData, 0, sizeof(connData));
+  if((flashConfig.flags & F_BRIDGE) && flashConfig.bridge_port) serbridgeStart();
 	bridge_active = 0;
 }

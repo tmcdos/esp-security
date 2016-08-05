@@ -121,8 +121,8 @@ int ICACHE_FLASH_ATTR cgiRelayGet(HttpdConnData *connData) {
 
   // print current status
   len = os_sprintf(buff, "{ \"relay_1\":%s, \"relay_2\":%s, \"relay_3\":%s, \"relay_4\":%s }", 
-    relay_status[0] ? "true" : "false", relay_status[1] ? "true" : "false", 
-    relay_status[2] ? "true" : "false", relay_status[3] ? "true" : "false");
+    relay_data[0].state ? "true" : "false", relay_data[1].state ? "true" : "false", 
+    relay_data[2].state ? "true" : "false", relay_data[3].state ? "true" : "false");
 
 	jsonHeader(connData, 200);
 	httpdSend(connData, buff, len);
@@ -204,7 +204,7 @@ int ICACHE_FLASH_ATTR cgiDefRelay(HttpdConnData *connData)
 	if (connData->conn==NULL) return HTTPD_CGI_DONE; // Connection aborted. Clean up.
 	if (connData->requestType == HTTPD_METHOD_POST) 
 	{
-	  for(i=0;i<=4;i++) flashConfig.rele_stat[i] = relay_status[i];
+	  for(i=0;i<=4;i++) flashConfig.rele_stat[i] = relay_data[i].state;
     if (configSave()) {
       NODE_DBG("New config saved\n");
       httpdStartResponse(connData, 200);

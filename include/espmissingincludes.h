@@ -59,6 +59,8 @@ int rand(void);
 void ets_bzero(void *s, size_t n);
 void ets_delay_us(int ms);
 
+ip_addr_t *dns_getserver(char numdns);
+
 // disappeared in SDK 1.1.0:
 #define os_timer_done ets_timer_done
 #define os_timer_handler_isr ets_timer_handler_isr

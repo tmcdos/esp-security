@@ -23,9 +23,14 @@ struct serbridgeConnData
 	bool           readytosend;   // true, if txbuffer can be sent by espconn_sent
 };
 
-void ICACHE_FLASH_ATTR serbridgeInit(int port);
+extern serbridgeConnData connData[MAX_CONN];
+extern uint8_t bridge_active; // there is currently active TCP-Bridge
+
+void ICACHE_FLASH_ATTR serbridgeInit(void);
 void ICACHE_FLASH_ATTR serbridgeInitPins(void);
 void ICACHE_FLASH_ATTR serbridgeUartCb(char *buf, int len);
 void ICACHE_FLASH_ATTR serbridgeReset();
+void ICACHE_FLASH_ATTR serbridgeStart(void);
+void ICACHE_FLASH_ATTR serbridgeStop(void);
                            
 #endif /* __SER_BRIDGE_H__ */

@@ -28,7 +28,7 @@
 #include <gpio.h>
 #include "cgiservices.h"
 #include "cgipolimex.h"
-
+#include "polimex.h"
 
 //#define SHOW_HEAP_USE
 
@@ -171,7 +171,7 @@ configWipe(); // uncomment to reset the config for testing purposes
   NODE_DBG("\n\n** %s, build %s\n", esp_link_version, esp_link_build);
   NODE_DBG("Flash config restore %s\n", restoreOk ? "ok" : "*FAILED*");
   // Relays
-  for(i=0;i<=4;i++) relay_status[i] = flashConfig.rele_stat[i];
+  for(i=0;i<=4;i++) relay_data[i].state = flashConfig.rele_stat[i];
   relay_init();
   // Wifi
   wifiInit();
@@ -180,7 +180,7 @@ configWipe(); // uncomment to reset the config for testing purposes
   // mount the http handlers
   httpdInit(builtInUrls, 80);
   // init the wifi-serial transparent bridge (port 5000)
-  serbridgeInit(flashConfig.bridge_port);
+  serbridgeInit();
   uart_add_recv_cb(&serbridgeUartCb);
 #ifdef SHOW_HEAP_USE
   os_timer_disarm(&prHeapTimer);

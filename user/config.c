@@ -26,8 +26,8 @@ FlashConfig flashDefault = {
   .web_user2 = "admin\0",
   .web_pass2 = "admin\0",
   .url_port = 80, // TCP port to send iCON events
-  .icon_host = "\0", // hostname to send iCON events
-  .icon_url = "\0", // URL pathname to send iCON events (without host, but leading slash)
+  .icon_url = "\0", // URL pathname to send iCON events (without trailing slash)
+  .icon_host = "\0",
   .log_mode = 3,   // log mode = UART_1
   .flags = F_RX_PULLUP,
   .sntp_server  = "bg.pool.ntp.org\0",

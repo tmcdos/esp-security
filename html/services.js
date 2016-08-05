@@ -1,6 +1,5 @@
 onLoad(function() {
   fetchServices();
-  bnd($("#Syslog-form"), "submit", changeServices);
   bnd($("#SNTP-form"), "submit", changeServices);
 });
 
@@ -53,20 +52,9 @@ function displayServices(data) {
     }
   });
 
-  $("#syslog-spinner").setAttribute("hidden", "");
   $("#sntp-spinner").setAttribute("hidden", "");
 
-  $("#Syslog-form").removeAttribute("hidden");
   $("#SNTP-form").removeAttribute("hidden");
-}
-
-function setMDNS(v) {
-  ajaxSpin("POST", "/services/update?mdns_enable=" + (v ? 1 : 0), function () {
-    showNotification("mDNS is now " + (v ? "enabled" : "disabled"));
-  }, function () {
-    showWarning("Enable/disable failed");
-    window.setTimeout(fetchServices, 100);
-  });
 }
 
 function fetchServices() {

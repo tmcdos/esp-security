@@ -6,7 +6,7 @@
 #include "user_interface.h"
 #include "relay.h"
 
-uint8_t relay_status[4];
+relay_info relay_data[4];
 
 uint32_t pin_mux[GPIO_PIN_COUNT] = {
   PAD_XPD_DCDC_CONF,  
@@ -158,7 +158,7 @@ int ICACHE_FLASH_ATTR relay_get_state(int relayNumber){
 
   if(relayNumber>=0 && relayNumber<4)
   {
-  	return relay_status[relayNumber];
+  	return relay_data[relayNumber].state;
   }
   else return -1;
 }
@@ -167,11 +167,11 @@ int ICACHE_FLASH_ATTR relay_set_state(int relayNumber,unsigned state){
 
   if(relayNumber>=0 && relayNumber<4)
   {
-  	relay_status[relayNumber] = state;
-  	NODE_DBG("Relay %d, new state %d\n",flashConfig.rele_pin[relayNumber],relay_status[relayNumber]);
+  	relay_data[relayNumber].state = state;
+  	NODE_DBG("Relay %d, new state %d\n",flashConfig.rele_pin[relayNumber],state);
     platform_gpio_mode(flashConfig.rele_pin[relayNumber],PLATFORM_GPIO_OUTPUT,PLATFORM_GPIO_FLOAT);     
   	platform_gpio_write(flashConfig.rele_pin[relayNumber],state); 
-  	return relay_status[relayNumber];
+  	return state;
 	} 
 	else return -1;
 }
@@ -180,11 +180,11 @@ int ICACHE_FLASH_ATTR relay_toggle_state(int relayNumber){
 
   if(relayNumber>=0 && relayNumber<4)
   {
-  	relay_status[relayNumber] = (relay_status[relayNumber] ^ 1);
-  	NODE_DBG("Relay %d, new state %d\n",flashConfig.rele_pin[relayNumber],relay_status[relayNumber]);
+  	relay_data[relayNumber].state = (relay_data[relayNumber].state ^ 1);
+  	NODE_DBG("Relay %d, new state %d\n",flashConfig.rele_pin[relayNumber],relay_data[relayNumber].state);
     platform_gpio_mode(flashConfig.rele_pin[relayNumber],PLATFORM_GPIO_OUTPUT,PLATFORM_GPIO_FLOAT);     
-  	platform_gpio_write(flashConfig.rele_pin[relayNumber],relay_status[relayNumber]); 
-  	return relay_status[relayNumber];
+  	platform_gpio_write(flashConfig.rele_pin[relayNumber],relay_data[relayNumber].state); 
+  	return relay_data[relayNumber].state;
 	} 
 	else return -1;
 }
@@ -193,5 +193,5 @@ void ICACHE_FLASH_ATTR relay_init(){
   int i;
   
 	NODE_DBG("Relay init\n");
-  for(i=0;i<4;i++) relay_set_state(i,relay_status[i]);
+  for(i=0;i<4;i++) relay_set_state(i,relay_data[i].state);
 }

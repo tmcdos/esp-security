@@ -10,7 +10,7 @@ TARGET		= httpd
 APPGEN_TOOL	?= gen_appbin.py
 
 # Optional modules (mqtt rest syslog)
-MODULES ?= syslog
+MODULES ?= 
 
 CFLAGS=
 
@@ -29,7 +29,7 @@ endif
 
 # which modules (subdirectories) of the project to include in compiling
 LIBRARIES_DIR 	= libraries
-MODULES		+= espfs httpd user serial
+MODULES		+= espfs httpd user serial polimex
 MODULES		+= $(foreach sdir,$(LIBRARIES_DIR),$(wildcard $(sdir)/*))
 EXTRA_INCDIR	= include . # lib/heatshrink/
 
@@ -37,8 +37,8 @@ EXTRA_INCDIR	= include . # lib/heatshrink/
 LIBS		= c gcc hal phy pp net80211 wpa main lwip crypto ssl
 
 # compiler flags using during compilation of source files
-CFLAGS		= -Os -std=c99 -Wno-unused-value -Wpointer-arith -Wundef -Wall -Wl,-EL -fno-inline-functions \
-		-nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections \
+CFLAGS		= -Os -std=c99 -Werror -Wno-unused-value -Wpointer-arith -Wundef -Wall -Wl,-EL \
+		-nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections -fno-inline-functions \
 		-D__ets__ -DICACHE_FLASH -D_STDINT_H -Wno-address -DFIRMWARE_SIZE=$(ESP_FLASH_MAX) \
 		-DVERSION="$(VERSION)" -DBUILD_DATE="$(DATE)" -DBUILD_TIME="$(TIME)" -DBUILD_NUM="$(BUILD_NUMBER)"
 

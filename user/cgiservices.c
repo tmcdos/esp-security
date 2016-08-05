@@ -79,22 +79,6 @@ int ICACHE_FLASH_ATTR cgiSystemInfo(HttpdConnData *connData) {
   return HTTPD_CGI_DONE;
 }
 
-void ICACHE_FLASH_ATTR cgiServicesSNTPInit() {
-  
-  if (flashConfig.sntp_server[0] != '\0') {    
-    sntp_stop();
-    if (true == sntp_set_timezone(flashConfig.timezone_offset)) {
-      sntp_setservername(0, flashConfig.sntp_server);  
-      sntp_startup_stamp = 0;
-      sntp_init();
-      os_timer_disarm(&sntp_timer);
-      os_timer_setfn(&sntp_timer, (os_timer_func_t *)user_sntp_stamp, NULL);
-      os_timer_arm(&sntp_timer, 100, 0);
-    }
-    NODE_DBG("SNTP timesource set to %s with offset %d\n", flashConfig.sntp_server, flashConfig.timezone_offset);
-  }
-}
-
 void ICACHE_FLASH_ATTR user_sntp_stamp(void *arg)
 {
   uint32 current_stamp;
@@ -105,6 +89,22 @@ void ICACHE_FLASH_ATTR user_sntp_stamp(void *arg)
   {
     os_timer_disarm(&sntp_timer);
     sntp_start = current_stamp;
+  }
+}
+
+void ICACHE_FLASH_ATTR cgiServicesSNTPInit() {
+  
+  if (flashConfig.sntp_server[0] != '\0') {    
+    sntp_stop();
+    if (true == sntp_set_timezone(flashConfig.timezone_offset)) {
+      sntp_setservername(0, flashConfig.sntp_server);  
+      sntp_start = 0;
+      sntp_init();
+      os_timer_disarm(&sntp_timer);
+      os_timer_setfn(&sntp_timer, (os_timer_func_t *)user_sntp_stamp, NULL);
+      os_timer_arm(&sntp_timer, 100, 0);
+    }
+    NODE_DBG("SNTP timesource set to %s with offset %d\n", flashConfig.sntp_server, flashConfig.timezone_offset);
   }
 }
 
