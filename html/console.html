@@ -1,0 +1,76 @@
+<!doctype html>
+<html><head>
+  <title>esp-link</title>
+  <link rel="stylesheet" href="pure.css">
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div id="layout">
+  <div id="main" class="flex-fill flex-vbox" style="max-height:100%">
+    <div class="header">
+      <h1>Microcontroller Console</h1>
+    </div>
+    <div class="content flex-fill flex-vbox">
+      <p>The Microcontroller console shows the last 1024 characters
+         received from UART0, to which a microcontroller is typically attached.
+         The UART is configured for 8 bits, no parity, 1 stop bit (8N1).
+      </p>
+      <div>
+        <label>TCP bridge port:&nbsp;</label>
+        <input id="tcp_port" type="text" name="port" maxlength="5" style="width:4em">
+        &nbsp; <a id="bridge-button" class="pure-button button-primary" href="#">Change port</a>
+        &nbsp; <a id="clear-button" class="pure-button button-primary" href="#">Clear Log</a>
+        &nbsp; Baud (8N1):
+        <select id="baud-sel" class="pure-button" href="#">
+          <option value="0"> </option>
+          <option value="9600">9600</option>
+          <option value="19200">19200</option>
+          <option value="38400">38400</option>
+          <option value="57600">57600</option>
+          <option value="115200">115200</option>
+          <option value="230400">230400</option>
+          <option value="250000">250000</option>
+          <option value="460800">460800</option>
+        </select>
+      </div>
+      <div class="pure-g">
+        <div class="pure-u-1-4"><legend><b>Console</b></legend></div>
+        <div class="pure-u-3-4"></div>
+      </div>
+      <pre class="console flex-fill" id="console">--- No Content ---</pre>
+      <div>
+        <div class="pure-g">
+          <div class="pure-u-1-4"><legend><b>Console entry</b></legend></div>
+          <div class="pure-u-2-4">
+            <legend>(ENTER to submit, ESC to clear)</legend>
+          </div>
+          <div class="pure-u-1-4">
+            <legend>Add:
+              <input type="checkbox" id="input-add-cr" checked class="inline"><label>CR(\r)</label>
+              <input type="checkbox" id="input-add-lf" checked class="inline"><label>LF(\n)</label>
+            </legend>
+          </div>
+        </div>
+        <div class="pure-g">
+          <div class="pure-u-1-1">
+            <span style="float:right; width:10px;"></span>
+            <input type="text" class="console-in" id="input-text" value="">
+          </div>
+        </div>
+        <div class="pure-g">
+          <div class="pure-u-1-4"><legend><b>History buffer</b></legend></div>
+          <div class="pure-u-2-4"><legend>(UP/DOWN arrows to select)</legend></div>
+          <div class="pure-u-1-4"></div>
+        </div>
+        <div class="pure-g">
+          <div class="pure-u-1-1"><select class="console-in" id="send-history" size="5"></select></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="ui.js"></script>
+<script src="console.js"></script>
+<script src="console_main.js"></script>
+</body></html>

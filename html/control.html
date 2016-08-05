@@ -1,0 +1,104 @@
+<!doctype html>
+<html><head>
+  <title>esp-link</title>
+  <link rel="stylesheet" href="pure.css">
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div id="layout">
+  <div id="main">
+    <div class="header">
+      <h1>iCON settings</h1>
+    </div>
+
+    <div class="content">
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>Controllers
+            <div id="list-spinner" class="spinner spinner-small"></div>
+          </h1>
+          <table id="list-table" class="pure-table pure-table-horizontal">
+          </table>
+        </div>
+      </div>
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>Scan RS-485
+            <div id="scan-spinner" class="spinner spinner-small" hidden></div>
+          </h1>
+          <form action="#" id="scan-form" class="pure-form">
+            <div class="pure-form-stacked">
+              <div>
+                <label>First address</label>
+                <input type="text" name="adr_beg" placeholder="0" maxlength="3" />
+                <div class="popup">The lower end of the range of addresses to be scanned (default 0, max 254)</div>
+              </div>
+              <div>
+                <label>Last address</label>
+                <input type="text" name="adr_end" placeholder="50" maxlength="3" />
+                <div class="popup">The upper end of the range of addresses to be scanned (default 50, max 254)</div>
+              </div>
+              <div>
+                <button id="scan-start" type="button" class="pure-button button-primary" onClick="javascript: startScan(this.form.adr_beg, this.form.adr_end);">
+                  START scan
+                </button>
+                &nbsp;
+                <button id="scan-stop" type="button" class="pure-button button-primary pure-button-disabled" onClick="javascript: stopScan();" disabled>
+                  STOP scan
+                </button>
+              </div>
+              <div id="progress" hidden>
+                <div style="border: 1px solid black; height: 16px; width: 100%; background-color: white; margin-top:10px;">
+          				<div id="progressbar" style="background-color: #58B768; height:16px; width: 0"></div>
+            		</div> 
+                <div id="dev-count" align="center"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>HTTP call-backs
+            <div id="cback-spinner" class="spinner spinner-small"></div>
+          </h1>
+          <div style="color:red">Leave empty to prevent callbacks</div>
+          <form action="#" id="cback-form" class="pure-form" hidden>
+            <div class="pure-form-stacked">
+              <div>
+                <label>Hostname only (max 30 chars)</label>
+                <input type="text" name="callback_server" maxlength="30" />
+                <div class="popup">Fully qualified domain name of the server where iCON events are sent (e.g. <b>portal.mycompany.com</b>)</div>
+              </div>
+              <div>
+                <input type="checkbox" name="callback_ssl" />
+                <label>Use SSL for connection</label>
+              </div>
+              <div>
+                <label>TCP port</label>
+                <input type="text" name="callback_port" placeholder="80" maxlength="5" />
+                <div class="popup">Default is 80</div>
+              </div>
+              <div>
+                <label>URL path (max 63 chars)</label>
+                <input type="text" name="callback_url" maxlength="63" />
+                <div class="popup">Address of the script for receiving iCON events (e.g. <b>/attendance/new_event.php</b>)</div>
+              </div>
+              <div>
+                <input type="checkbox" name="callback_autoscan" />
+                <label>Autoscan RS-485 bus on power-up</label>
+              </div>
+            </div>
+            <button id="cback-button" type="submit" class="pure-button button-primary">
+              Update Callback settings
+            </button>
+          </form>
+        </div>
+      </div>       
+    </div>
+  </div>
+</div>
+<script src="ui.js"></script>
+<script src="control.js"></script>
+</body></html>

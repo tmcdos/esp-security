@@ -1,0 +1,56 @@
+#ifndef _USER_CONFIG_H_
+#define _USER_CONFIG_H_
+#include <c_types.h>
+#ifdef __WIN32__
+#include <_mingw.h>
+#endif
+
+# undef SHOW_HEAP_USE
+#define DEBUG_SDK true
+
+//#define CMD_DBG
+//#undef ESPFS_DBG
+//#undef CGI_DBG
+//#define CGIFLASH_DBG
+//#define CGIMQTT_DBG
+//#define CGIPINS_DBG
+//#define CGIWIFI_DBG
+//#define CONFIG_DBG
+//#define LOG_DBG
+//#define STATUS_DBG
+//#define HTTPD_DBG
+//#define MQTT_DBG
+//#define MQTTCMD_DBG
+//#undef PKTBUF_DBG
+//#define REST_DBG
+//#define RESTCMD_DBG
+//#define SERBR_DBG
+//#define SERLED_DBG
+//#define SLIP_DBG
+//#define UART_DBG
+//#define MDNS_DBG
+//#define OPTIBOOT_DBG
+//#undef SYSLOG_DBG
+//#undef CGISERVICES_DBG
+
+// If defined, the default hostname for DHCP will include the chip ID to make it unique
+#undef CHIP_IN_HOSTNAME
+
+extern char esp_link_version[];
+extern char esp_link_date[];
+extern char esp_link_time[];
+extern char esp_link_build[];
+extern uint8_t UTILS_StrToIP(const char* str, void *ip);
+
+// ===================================================================
+
+#define DEBUG_LOG
+# define DEBUGIP
+
+#ifdef DEBUG_LOG
+#define NODE_DBG(...) os_printf_plus( __VA_ARGS__ )
+#else
+#define NODE_DBG
+#endif
+
+#endif

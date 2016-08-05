@@ -1,0 +1,132 @@
+<!doctype html>
+<html><head>
+  <title>esp-link</title>
+  <link rel="stylesheet" href="pure.css">
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div id="layout">
+  <div id="main">
+    <div class="header">
+      <h1 style="margin-top:0"><span class="esp">esp</span>-link</h1>
+    </div>
+
+    <div class="content">
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>System overview</h1>
+          <div id="wifi-spinner" class="spinner spinner-small"></div>
+          <table id="wifi-table" class="pure-table pure-table-horizontal" hidden><tbody>
+            <tr><td class="popup-target">Hostname</td><td>
+              <div class="click-to-edit system-name">
+                <span class="edit-off"></span>
+                <input class="edit-on" maxlength=31 hidden></input>
+                <div class="popup">Click to edit!<br>Hostname displayed in menu bar and used by DHCP</div>
+              </div>
+            </td></tr>
+            <tr><td>Network SSID</td><td id="wifi-ssid"></td></tr>
+            <tr><td>WiFi status</td><td id="wifi-status"></td></tr>
+            <tr><td>WiFi address</td><td id="wifi-ip"></td></tr>
+            <tr><td>Serial baud</td><td class="system-baud"></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>System details</h1>
+          <div id="system-spinner" class="spinner spinner-small"></div>
+          <table id="system-table" class="pure-table pure-table-horizontal" hidden><tbody>
+          <tr><td>WiFi mode</td><td id="wifi-mode"></td></tr>
+          <tr><td>WiFi channel</td><td id="wifi-chan"></td></tr>
+          <tr><td>Flash chip ID</td><td>
+            <div>
+              <span class="system-id"></span>
+              <div class="popup pop-left">Common IDs: 4016=4MB, 4015=2MB, 4014=1MB, 4013=512KB</div>
+            </div>
+          </td></tr>
+          <tr><td>Flash size</td><td>
+            <div>
+              <span class="system-size"></span>
+              <div class="popup pop-left">Size configured into bootloader, must match chip size</div>
+            </div>
+          </td></tr>
+          <tr><td>Current partition</td><td class="system-partition"></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>Relay status</h1>
+          <div id="relay-test" style="margin-bottom:30px">
+      			<a href="#" class="btn btn-no" id="relay_1" onClick="javascript:setRele('relay_1',2);">Relay #1 <span id="state_1">OFF</span></a>
+      			&nbsp;
+      			<a href="#" class="btn btn-no" id="relay_2" onClick="javascript:setRele('relay_2',2);">Relay #2 <span id="state_2">OFF</span></a>		
+      			<br><br>
+      			<a href="#" class="btn btn-no" id="relay_3" onClick="javascript:setRele('relay_3',2);">Relay #3 <span id="state_3">OFF</span></a>		
+      			&nbsp;
+      			<a href="#" class="btn btn-no" id="relay_4" onClick="javascript:setRele('relay_4',2);">Relay #4 <span id="state_4">OFF</span></a>		
+      			<br><br>
+      		</div>
+      		<div align="center"><button id="def_relay" type="button" class="pure-button button-primary" onClick="javascript:defRele();">Save as default</button></div>
+        </div>
+      </div>
+      <div style="float:left; padding:2px">
+        <div class="card">
+          <h1>Pin assignment</h1>
+          <div id="pin-spinner" class="spinner spinner-small"></div>
+          <div id="pin-table" hidden>
+            <form action="#" id="pinform" class="pure-form pure-form-aligned form-narrow">
+              <div class="pure-control-group">
+                <label for="pin-preset">Presets</label>
+                <select id="pin-preset" class="pure-button">
+                  <option value="" selected disabled></option>
+                </select>
+              </div>
+              <hr>
+              <div class="pure-control-group">
+                <label for="pin-r1">Relay 1</label>
+                <select id="pin-r1"></select>
+                <div class="popup">GPIO pin for relay #1</div>
+              </div>
+              <div class="pure-control-group">
+                <label for="pin-r2">Relay 2</label>
+                <select id="pin-r2"></select>
+                <div class="popup">GPIO pin for relay #2</div>
+              </div>
+              <div class="pure-control-group">
+                <label for="pin-r3">Relay 3</label>
+                <select id="pin-r3"></select>
+                <div class="popup">GPIO pin for relay #3</div>
+              </div>
+              <div class="pure-control-group">
+                <label for="pin-r4">Relay 4</label>
+                <select id="pin-r4"></select>
+                <div class="popup">GPIO pin for relay #4</div>
+              </div>
+              <div class="pure-control-group">
+                <label for="pin-swap">UART pins</label>
+                <select id="pin-swap" class="pure-button">
+                  <option value="0">normal</option>
+                  <option value="1">swapped</option>
+                </select>
+                <div class="popup">Swap UART0 pins to avoid ROM boot message.<br>Normal is
+                  TX on gpio1/TX0 and RX on gpio3/RX0, swapped is TX on gpio15 and RX on gpio13.
+                </div>
+              </div>
+              <div class="pure-control-group">
+                <label for="pin-rxpup" class="pure-checkbox">RX pull-up</label>
+                <input id="pin-rxpup" type="checkbox">
+                <div class="popup">Enable internal 40K pull-up on RX</div>
+              </div>
+              <button id="set-pins" type="submit" class="pure-button button-primary">Change</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="ui.js"></script>
+<script src="home.js"></script>
+</body></html>
