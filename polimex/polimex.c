@@ -14,7 +14,7 @@ static esp_udp autoUdp;
 
 os_timer_t heart_timer;
 uint32_t heart_start; // value of OS_TIME at the moment of heartbeat arming - microseconds
-
+uint32_t heart_id;
                                                                  
 // waiting for broadcasts, reply with information for auto-detection of convertors
 static void ICACHE_FLASH_ATTR BcastRecvCb(void *arg, char *data, unsigned short len) 
@@ -78,8 +78,10 @@ void ICACHE_FLASH_ATTR start_heartbeat(void)
 
 void ICACHE_FLASH_ATTR heart_timerfunc(void)
 {
-
-  // send HTTP 
+  if(http_running) heart_wait = true;
+    else send_heartbeat();
+  start_heartbeat();
+  json_timeout = false;
 }
 
 //===== Initialization
@@ -100,10 +102,13 @@ void ICACHE_FLASH_ATTR polimexInit(void)
 
 	icon_state = ICS_IDLE;
 	cmd_wait = false;
+	http_running = false;
+	json_timeout = false;
+	heart_wait = false;
+	heart_id = 0;
 	icon_data_len = 0;
   os_memset(icon_data, 0, sizeof(icon_data));
   os_timer_setfn(&icon_timer, (os_timer_func_t *)icon_timerfunc, NULL); // Setup iCON timeout timer
-  //os_timer_setfn(&event_timer, (os_timer_func_t *)event_timerfunc, NULL); // Setup iCON Events timer
   os_timer_setfn(&heart_timer, (os_timer_func_t *)heart_timerfunc, NULL); // Heart Beats
   // start heartbeat
   start_heartbeat();

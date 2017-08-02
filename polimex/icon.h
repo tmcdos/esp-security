@@ -22,6 +22,18 @@ typedef struct  __attribute__((packed))
   uint8_t start;
   uint8_t addr;
   uint8_t cmd;
+  uint8_t hw_type[2], sernum[4], sw_ver[3], num_in[3], num_out[3], num_reader;
+  uint8_t ts[2], io_tab[2], sot, mode, max_card[5], max_event[5];
+  uint8_t err;
+  uint8_t crc[3];
+  uint8_t end;
+} scan_result;
+
+typedef struct  __attribute__((packed))
+{
+  uint8_t start;
+  uint8_t addr;
+  uint8_t cmd;
   uint16_t in;
   uint16_t out;
   uint8_t UH;
@@ -64,6 +76,7 @@ typedef struct  __attribute__((packed))
 typedef union __attribute__((packed)) 
 {
   char uart[UART_BUF_LEN];
+  scan_result ans_scan;
   event_empty ans_empty;
   event_733 ans_event;
 } icon_input;
@@ -71,16 +84,17 @@ typedef union __attribute__((packed))
 typedef struct icon_node_str
 {
   uint8_t adr, skip, num_timeout, priority, def_priority;
-  bool must_delete;
-  uint16_t inp,outp;
-  uint8_t UH;
-  uint8_t UL;
+  bool must_delete; // an event is pending to be deleted
+  scan_result ctrl_info;
+  uint16_t inp,outp; // digital inputs, outputs
+  uint8_t UH,UL; // battery voltage
   uint8_t DT[8]; // BCD counter
+  uint8_t err;
   icon_event_format event;
 } icon_node;
 
 extern ics_type icon_state;
-extern uint8_t icon_start_adr, icon_stop_adr, icon_scan_adr, icon_count, icon_current, icon_adr;
+extern uint8_t icon_start_adr, icon_stop_adr, icon_scan_adr, icon_count, icon_current, icon_adr, icon_cmd;
 extern uint8_t saved_adr, saved_cmd;
 //extern struct icon_node icon_dev[MAX_ICON];
 extern int icon_data_len;
@@ -90,17 +104,13 @@ extern bool cmd_wait;
 
 uint8 ICACHE_FLASH_ATTR calc_crc(const char *buf, int len);
 void ICACHE_FLASH_ATTR icon_recv(char *buf, int length);
+void ICACHE_FLASH_ATTR icon_scan_next(void);
 void ICACHE_FLASH_ATTR icon_send_scan(void);
 void ICACHE_FLASH_ATTR icon_start_poll(void);
 void ICACHE_FLASH_ATTR icon_next_poll(void);
 void ICACHE_FLASH_ATTR icon_send_ping(void);
 void ICACHE_FLASH_ATTR icon_send_cmd(void);
-
+void ICACHE_FLASH_ATTR icon_must_delete(void);
 void ICACHE_FLASH_ATTR icon_timerfunc(void);
-void ICACHE_FLASH_ATTR icon_scan_next(void);
-void ICACHE_FLASH_ATTR icon_send_read(bool del_event);
-void ICACHE_FLASH_ATTR icon_wait_event(void);
-void ICACHE_FLASH_ATTR icon_poll_next(void);
-void ICACHE_FLASH_ATTR event_timerfunc(void);
 
 #endif

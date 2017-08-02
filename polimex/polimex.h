@@ -4,7 +4,7 @@
 #include <c_types.h>
 
 extern uint8_t bridge_active;
-extern uint32_t heart_start;
+extern uint32_t heart_start, heart_id;
 
 void ICACHE_FLASH_ATTR polimexInit(void);
 void ICACHE_FLASH_ATTR start_heartbeat(void);

@@ -21,7 +21,7 @@ uint8_t icon_start_adr; // starting address for iCON-bus scan
 uint8_t icon_stop_adr; // ending address for iCON-bus scan
 uint8_t icon_scan_adr; // currently being scanned device ID
 
-os_timer_t icon_timer, event_timer;
+os_timer_t icon_timer;
 
 uint8_t icon_count; // numer of valid elements in ICON_DEV
 uint8_t icon_current; // currently polled element in ICON_DEV
@@ -56,19 +56,90 @@ uint8_t ICACHE_FLASH_ATTR calc_crc(const char *buf, int len)
   return crc;
 }
 
+// this is reply for 0xF0 command
 void ICACHE_FLASH_ATTR icon_scan_reply(void) 
 {
-  if(icon_count < MAX_ICON)
+  if(icon_dev[icon_current].err == 0xE0)
   {
-    NODE_DBG("Add device at position %d\n",icon_count);
-    // add newly discovered iCON device to the list
-    memset(&icon_dev[icon_count], 0, sizeof(icon_node)); 
-    icon_dev[icon_count].adr = icon_adr;
-    icon_count++;
+    if(icon_count < MAX_ICON)
+    {
+      NODE_DBG("Add device at position %d\n",icon_count);
+      // add newly discovered iCON device to the list
+      memset(&icon_dev[icon_count], 0, sizeof(icon_node)); 
+      icon_dev[icon_count].adr = icon_adr;
+      memcpy(&icon_dev[icon_current].ctrl_info, &icon_buf.ans_scan.hw_type, sizeof(scan_result));
+      icon_count++;
+    }
+    else 
+    {
+      icon_start_poll();
+      return;
+    }
+  }
+  icon_scan_next();
+}
+
+// this is short reply for 0xFA command
+void ICACHE_FLASH_ATTR icon_event_short(void) 
+{
+  int i;
+  
+  NODE_DBG("Empty event received for #%d\n",icon_adr);
+  //icon_dev[icon_current].modified = 0;
+  // no new events - only update some info variables about controller
+  //if(icon_buf.ans_empty.in != icon_dev[icon_current].inp) 
+  {
+    icon_dev[icon_current].inp = icon_buf.ans_empty.in;
+    //icon_dev[icon_current].modified = 1;
+  }
+  //if(icon_buf.ans_empty.out != icon_dev[icon_current].outp) 
+  {
+    icon_dev[icon_current].outp = icon_buf.ans_empty.out;
+    //icon_dev[icon_current].modified = 1;
+  }
+  //if(icon_buf.ans_empty.UL != 0 && icon_buf.ans_empty.UH != 0 
+  //  && abs(
+  //    ((icon_buf.ans_empty.UL & 15) + 10*(icon_buf.ans_empty.UL >> 4) + 100*(icon_buf.ans_empty.UH & 15) + 1000*(icon_buf.ans_empty.UH >> 4)) -
+  //    ((icon_dev[icon_current].UL & 15) + 10*(icon_dev[icon_current].UL >> 4) + 100*(icon_dev[icon_current].UH & 15) + 1000*(icon_dev[icon_current].UH >> 4))
+  //  ) > 99)
+  {
+    icon_dev[icon_current].UL = icon_buf.ans_empty.UL;
+    icon_dev[icon_current].UH = icon_buf.ans_empty.UH;
+    //icon_dev[icon_current].modified = 1;
+  }
+  for(i=0; i<sizeof(icon_buf.ans_empty.DT); i++)
+    //if(icon_buf.ans_empty.DT[i] != icon_dev[icon_current].DT[i]) 
+    {
+      icon_dev[icon_current].DT[i] = icon_buf.ans_empty.DT[i];
+      //icon_dev[icon_current].modified = 1;
+    }
+  //if(icon_dev[icon_current].modified != 0)
+  {
+    //NODE_DBG("No events - but some other change for #%d\n",icon_adr);
+    // send info to callback URL
+    //send_json_info();
+  }
+  //else
+    icon_next_poll();
+}
+
+// this is long reply for 0xFA command
+void ICACHE_FLASH_ATTR icon_event_long(void) 
+{
+  NODE_DBG("New event for #%d\n",icon_adr);
+  // new event
+  if(flashConfig.flags & F_EVENT_PUSH)
+  {
+    memcpy(&icon_dev[icon_current].event, &icon_buf.ans_event.event_data, sizeof(icon_event_format));
+    //icon_dev[icon_current].modified = 3;
+    // send event to callback URL
+    prepare_json_event(&icon_dev[icon_current]);
+    need_200 = true;
+    send_json_info();
   }
 }
 
-// callback with a buffer of characters that have arrived on the uart
+// callback with a buffer of characters that have arrived on the UART
 void ICACHE_FLASH_ATTR icon_recv(char *buf, int length) 
 {
   uint32_t icon_crc;
@@ -90,96 +161,48 @@ void ICACHE_FLASH_ATTR icon_recv(char *buf, int length)
     icon_crc = calc_crc(&icon_buf.uart[1], icon_len-2-3); // exclude Start/Stop and CRC itself
     if(icon_crc == icon_buf.uart[icon_len-2] + icon_buf.uart[icon_len-3]*10 + icon_buf.uart[icon_len-4]*100)
     {
-      // good CRC -- interpret packet
+      // good CRC -- decode packet
       NODE_DBG("CRC is good\n");
+      icon_dev[icon_current].err = icon_buf.uart[icon_len-5];
+      icon_dev[icon_current].num_timeout = 0;
+      icon_dev[icon_current].skip = 0;
       switch(icon_state)
       {
         case ICS_IDLE: break;
-        case ICS_SCAN:
+        case ICS_SCAN: 
+          icon_scan_reply();
           break;
         case ICS_EVENT:
+          // check for new event
+          if(icon_len == sizeof(event_empty)) icon_event_short();
+            else icon_event_long();
           break;
         case ICS_DELETE:
+          if(icon_buf.uart[icon_len-5] != 0xE0) icon_next_poll();
+          else
+          {
+            NODE_DBG("Deleted event for #%d\n",icon_adr);
+            // event deleted - pull another event (from same device)
+            icon_dev[icon_current].must_delete = false;
+            icon_send_ping();
+          }
           break;
         case ICS_CMD:
+          NODE_DBG("Reply from #%d for (%02X)\n",icon_adr,icon_cmd);
+          json_len = os_sprintf(udp_reply,"{\"convertor\": %02X%02X%02X, \"response\":{\"id\":%d, \"c\":%d, \"e\":%d, \"d\":",
+            flashConfig.convertor[0], flashConfig.convertor[1], flashConfig.convertor[2], icon_adr, icon_cmd, 
+            icon_buf.uart[icon_len-5] & 15
+          );
+          for(i=3;i<icon_len-5;i++) json_len += os_sprintf(&udp_reply[json_len],"%02X",icon_buf.uart[i]);
+          json_len += os_sprintf(&udp_reply[json_len],"}}");
+          need_200 = false;
+          send_json_info();
           break;
       }
-      if(icon_state == ICS_SCAN)
-      {
-        if(icon_count < MAX_ICON)
-        {
-          NODE_DBG("Add device at position %d\n",icon_count);
-          // add newly discovered iCON device to the list
-          memset(&icon_dev[icon_count], 0, sizeof(icon_node)); 
-          icon_dev[icon_count].adr = icon_adr;
-  	      icon_count++;
-  	    }
-      }
-      else if(icon_state == ICS_EVENT)
-      {
-        // check for new event
-        if(icon_len == sizeof(event_empty))
-        {
-          NODE_DBG("Empty event received for #%d\n",icon_adr);
-          //icon_dev[icon_current].modified = 0;
-          // no new events - only update some info variables about controller
-          //if(icon_buf.ans_empty.in != icon_dev[icon_current].inp) 
-          {
-            icon_dev[icon_current].inp = icon_buf.ans_empty.in;
-            //icon_dev[icon_current].modified = 1;
-          }
-          //if(icon_buf.ans_empty.out != icon_dev[icon_current].outp) 
-          {
-            icon_dev[icon_current].outp = icon_buf.ans_empty.out;
-            //icon_dev[icon_current].modified = 1;
-          }
-          //if(icon_buf.ans_empty.UL != 0 && icon_buf.ans_empty.UH != 0 
-          //  && abs(
-          //    ((icon_buf.ans_empty.UL & 15) + 10*(icon_buf.ans_empty.UL >> 4) + 100*(icon_buf.ans_empty.UH & 15) + 1000*(icon_buf.ans_empty.UH >> 4)) -
-          //    ((icon_dev[icon_current].UL & 15) + 10*(icon_dev[icon_current].UL >> 4) + 100*(icon_dev[icon_current].UH & 15) + 1000*(icon_dev[icon_current].UH >> 4))
-          //  ) > 99)
-          {
-            icon_dev[icon_current].UL = icon_buf.ans_empty.UL;
-            icon_dev[icon_current].UH = icon_buf.ans_empty.UH;
-            //icon_dev[icon_current].modified = 1;
-          }
-          for(i=0; i<sizeof(icon_buf.ans_empty.DT); i++)
-            //if(icon_buf.ans_empty.DT[i] != icon_dev[icon_current].DT[i]) 
-            {
-              icon_dev[icon_current].DT[i] = icon_buf.ans_empty.DT[i];
-              //icon_dev[icon_current].modified = 1;
-            }
-          //if(icon_dev[icon_current].modified != 0)
-          {
-            NODE_DBG("No events - but some other change for #%d\n",icon_adr);
-            // send info to callback URL
-            //send_json_info();
-          }
-          //else           icon_poll_next();
-        }
-        else
-        {
-          NODE_DBG("New event for #%d\n",icon_adr);
-          // new event
-          memcpy(&icon_dev[icon_current].event, &icon_buf.ans_event.event_data, sizeof(icon_event_format));
-          //icon_dev[icon_current].modified = 3;
-          // send event to callback URL
-          prepare_json_event(&icon_dev[icon_current]);
-          send_json_info();
-        }
-      }
-      else if(icon_state == ICS_DELETE)
-      {
-        NODE_DBG("Deleted event for #%d\n",icon_adr);
-        // event deleted - pull another event (from same device)
-        icon_state = ICS_IDLE;
-        //icon_send_read(false);
-      }
     }
-    //if(icon_state == ICS_SCAN) icon_scan_next();
+    else if(icon_state == ICS_SCAN) icon_scan_next();
 	}
 }
-
 
 // called on receive timeout
 void ICACHE_FLASH_ATTR icon_timerfunc(void)
@@ -189,11 +212,9 @@ void ICACHE_FLASH_ATTR icon_timerfunc(void)
   {
     case ICS_IDLE:
       break;
-    case ICS_SCAN:
+    case ICS_SCAN: icon_scan_next();
       {
         // no response - move to next device
-        icon_scan_adr++;
-        icon_send_scan();
       }
       break;
     case ICS_EVENT:
@@ -205,15 +226,16 @@ void ICACHE_FLASH_ATTR icon_timerfunc(void)
       break;
     case ICS_CMD:
       need_200 = false;
-      os_sprintf(udp_reply, "{\"id\": %d, \"c\": \"%02X\", \"e\":20, \"d\":\"\"}", icon_adr, icon_cmd);
+      json_len = os_sprintf(udp_reply, "{\"id\": %d, \"c\": \"%02X\", \"e\":20}", icon_adr, icon_cmd); // timeout
       send_json_info();
       break;
   }
 }
 
-
-
-
+void ICACHE_FLASH_ATTR icon_must_delete(void)
+{
+  icon_dev[icon_current].must_delete = true;
+}
 
 // send specified command to specified controller + any additional data
 void ICACHE_FLASH_ATTR icon_send_cmd(void)
@@ -300,7 +322,13 @@ void ICACHE_FLASH_ATTR icon_start_poll(void)
 {
   icon_current = 0;
   if(icon_count) icon_send_ping();
-  else icon_state = ICS_IDLE;
+    else icon_state = ICS_IDLE;
+}
+
+void ICACHE_FLASH_ATTR icon_scan_next(void)
+{
+  icon_scan_adr++;
+  icon_send_scan();
 }
 
 // continue iCON-bus scanning
